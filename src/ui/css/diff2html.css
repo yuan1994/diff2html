@@ -76,13 +76,12 @@
 
 .d2h-diff-tbody > tr > td {
   height: 20px;
-  line-height: 20px;
+  line-height: 18px;
 }
 
 .d2h-files-diff {
-  display: block;
+  display: flex;
   width: 100%;
-  height: 100%;
 }
 
 .d2h-file-diff {
@@ -95,8 +94,6 @@
   overflow-x: scroll;
   overflow-y: hidden;
   width: 50%;
-  margin-right: -4px;
-  margin-bottom: -8px;
 }
 
 .d2h-code-line {
