@@ -207,6 +207,11 @@ $(document).ready(function() {
 
         params['synchronisedScroll'] = params['synchronisedScroll'] || true;
 
+        params['maxLineLengthDiff'] = 250;
+        params['emptyTips'] = function(file) {
+          return 'The file is too large, cannot see directly, please go to <a href="https://github.com/yuan1994/diff2html" target="_blank">Github</a> view!';
+        };
+
         diff2htmlUi.draw(container, params);
         diff2htmlUi.fileListCloseable(container, params['fileListCloseable'] || false);
         params['highlight'] && diff2htmlUi.highlightCode(container);

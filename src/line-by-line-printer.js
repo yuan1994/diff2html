@@ -53,7 +53,27 @@
     var htmlDiffs = diffFiles.map(function(file) {
       var diffs;
       if (file.blocks.length) {
-        diffs = that._generateFileHtml(file);
+        var allowGenerate = true;
+        file.blocks.map(function(block) {
+          block.lines.map(function(line) {
+            if (line.content.length > that.config.maxLineLengthDiff) {
+              allowGenerate = false;
+              return false;
+            }
+          });
+        });
+        if (allowGenerate) {
+          diffs = that._generateFileHtml(file);
+        } else {
+          var emptyTips;
+          if (typeof that.config.emptyTips === 'function') {
+            file['diffName'] = printerUtils.getDiffName(file);
+            emptyTips = that.config.emptyTips(file);
+          } else {
+            emptyTips = that.config.emptyTips;
+          }
+          diffs = that._generateEmptyDiff(emptyTips);
+        }
       } else {
         diffs = that._generateEmptyDiff();
       }
@@ -212,10 +232,11 @@
       });
   };
 
-  LineByLinePrinter.prototype._generateEmptyDiff = function() {
+  LineByLinePrinter.prototype._generateEmptyDiff = function(emptyTips) {
     return hoganUtils.render(genericTemplatesPath, 'empty-diff', {
       contentClass: 'd2h-code-line',
-      diffParser: diffParser
+      diffParser: diffParser,
+      emptyTips: emptyTips
     });
   };
 

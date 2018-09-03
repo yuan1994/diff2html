@@ -57,7 +57,27 @@
     var content = diffFiles.map(function(file) {
       var diffs;
       if (file.blocks.length) {
-        diffs = that.generateSideBySideFileHtml(file);
+        var allowGenerate = true;
+        file.blocks.map(function(block) {
+          block.lines.map(function(line) {
+            if (line.content.length > that.config.maxLineLengthDiff) {
+              allowGenerate = false;
+              return false;
+            }
+          });
+        });
+        if (allowGenerate) {
+          diffs = that.generateSideBySideFileHtml(file);
+        } else {
+          var emptyTips;
+          if (typeof that.config.emptyTips === 'function') {
+            file['diffName'] = printerUtils.getDiffName(file);
+            emptyTips = that.config.emptyTips(file);
+          } else {
+            emptyTips = that.config.emptyTips;
+          }
+          diffs = that.generateEmptyDiff(emptyTips);
+        }
       } else {
         diffs = that.generateEmptyDiff();
       }
@@ -242,13 +262,14 @@
       });
   };
 
-  SideBySidePrinter.prototype.generateEmptyDiff = function() {
+  SideBySidePrinter.prototype.generateEmptyDiff = function(emptyTips) {
     var fileHtml = {};
     fileHtml.right = '';
 
     fileHtml.left = hoganUtils.render(genericTemplatesPath, 'empty-diff', {
       contentClass: 'd2h-code-side-line',
-      diffParser: diffParser
+      diffParser: diffParser,
+      emptyTips: emptyTips
     });
 
     return fileHtml;

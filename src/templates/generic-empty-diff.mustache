@@ -1,7 +1,8 @@
 <tr>
     <td class="{{diffParser.LINE_TYPE.INFO}}">
         <div class="{{contentClass}} {{diffParser.LINE_TYPE.INFO}}">
-            File without changes
+            {{#emptyTips}}{{{emptyTips}}}{{/emptyTips}}
+            {{^emptyTips}}File without changes{{/emptyTips}}
         </div>
     </td>
 </tr>
