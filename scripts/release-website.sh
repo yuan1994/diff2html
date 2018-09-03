@@ -42,6 +42,7 @@ cp -f ${INPUT_DIR}/CNAME ${OUTPUT_DIR}/
 cp -f ${INPUT_DIR}/favicon.ico ${OUTPUT_DIR}/
 cp -f ${INPUT_DIR}/robots.txt ${OUTPUT_DIR}/
 cp -f ${INPUT_DIR}/sitemap.xml ${OUTPUT_DIR}/
+cp -f ${INPUT_DIR}/templates/pages/demo/diff.txt ${OUTPUT_DIR}/
 
 echo "Creating diff2html assets symlink ..."
 ln -s ../dist docs/assets

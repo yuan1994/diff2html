@@ -11,7 +11,7 @@ var template = hogan.compile(readFile(root + '/template.mustache'));
 
 var options = {
   'all': {
-    'demoUrl': 'demo.html?diff=https://github.com/rtfpessoa/diff2html/pull/106'
+    'demoUrl': 'demo.html?diff=diff.txt'
   },
   'demo': {
     'extraClass': 'template-index-min'

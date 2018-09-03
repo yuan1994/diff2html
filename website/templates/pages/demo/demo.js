@@ -100,6 +100,7 @@ $(document).ready(function() {
 
     var bitbucketCommitUrl = /^https?:\/\/(?:www\.)?bitbucket\.org\/(.*?)\/(.*?)\/commits\/(.*?)(?:\/raw)?(?:\/.*)?$/;
     var bitbucketPrUrl = /^https?:\/\/(?:www\.)?bitbucket\.org\/(.*?)\/(.*?)\/pull-requests\/(.*?)(?:\/.*)?$/;
+    var localTestUrl = /^https?:\/\//;
 
     function gitLabUrlGen(userName, projectName, type, value) {
       return 'https://crossorigin.me/https://gitlab.com/' + userName + '/' + projectName + '/' + type + '/' + value + '.diff';
@@ -131,6 +132,9 @@ $(document).ready(function() {
       fetchUrl = bitbucketUrlGen(values[1], values[2], 'commit', values[3]);
     } else if ((values = bitbucketPrUrl.exec(url))) {
       fetchUrl = bitbucketUrlGen(values[1], values[2], 'pullrequests', values[3]);
+    } else if (!localTestUrl.exec(url)) {
+      fetchUrl = location.href.replace(/^(.*?)\/[^\/]*$/, '$1/' + url);
+      console.log(fetchUrl)
     } else {
       console.info('Could not parse url, using the provided url.');
       fetchUrl = 'https://crossorigin.me/' + url;
@@ -150,10 +154,10 @@ $(document).ready(function() {
   }
 
   function draw(req, forced) {
-    if (!validateUrl(req.url)) {
-      console.error('Invalid url provided!');
-      return;
-    }
+    // if (!validateUrl(req.url)) {
+    //   console.error('Invalid url provided!');
+    //   return;
+    // }
 
     if (validateUrl(req.originalUrl)) updateUrl(req.originalUrl);
 
@@ -209,7 +213,7 @@ $(document).ready(function() {
 
         params['maxLineLengthDiff'] = 250;
         params['emptyTips'] = function(file) {
-          return 'The file is too large, cannot see directly, please go to <a href="https://github.com/yuan1994/diff2html" target="_blank">Github</a> view!';
+          return 'The file is too large, cannot see directly, please go to <a href="https://github.com/yuan1994/diff2html/blob/master/' + file.diffName + '" target="_blank">Github</a> view!';
         };
 
         diff2htmlUi.draw(container, params);

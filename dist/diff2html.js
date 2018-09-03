@@ -6123,7 +6123,8 @@ process.umask = function() { return 0; };
     matching: 'none',
     matchWordsThreshold: 0.25,
     matchingMaxComparisons: 2500,
-    maxLineLengthHighlight: 10000
+    maxLineLengthHighlight: 10000,
+    maxLineLengthDiff: 250
   };
 
   /*
@@ -6444,7 +6445,27 @@ process.umask = function() { return 0; };
     var htmlDiffs = diffFiles.map(function(file) {
       var diffs;
       if (file.blocks.length) {
-        diffs = that._generateFileHtml(file);
+        var allowGenerate = true;
+        file.blocks.map(function (block) {
+          block.lines.map(function (line) {
+            if (line.content.length > that.config.maxLineLengthDiff) {
+              allowGenerate = false;
+              return false;
+            }
+          });
+        });
+        if (allowGenerate) {
+          diffs = that._generateFileHtml(file);
+        } else {
+          var emptyTips;
+          if (typeof that.config.emptyTips === 'function') {
+            file[ 'diffName' ] = printerUtils.getDiffName(file);
+            emptyTips = that.config.emptyTips(file);
+          } else {
+            emptyTips = that.config.emptyTips;
+          }
+          diffs = that._generateEmptyDiff(emptyTips);
+        }
       } else {
         diffs = that._generateEmptyDiff();
       }
@@ -6603,10 +6624,11 @@ process.umask = function() { return 0; };
       });
   };
 
-  LineByLinePrinter.prototype._generateEmptyDiff = function() {
+  LineByLinePrinter.prototype._generateEmptyDiff = function (emptyTips) {
     return hoganUtils.render(genericTemplatesPath, 'empty-diff', {
       contentClass: 'd2h-code-line',
-      diffParser: diffParser
+      diffParser: diffParser,
+      emptyTips: emptyTips
     });
   };
 
@@ -7068,7 +7090,27 @@ process.umask = function() { return 0; };
     var content = diffFiles.map(function(file) {
       var diffs;
       if (file.blocks.length) {
-        diffs = that.generateSideBySideFileHtml(file);
+        var allowGenerate = true;
+        file.blocks.map(function (block) {
+          block.lines.map(function (line) {
+            if (line.content.length > that.config.maxLineLengthDiff) {
+              allowGenerate = false;
+              return false;
+            }
+          });
+        });
+        if (allowGenerate) {
+          diffs = that.generateSideBySideFileHtml(file);
+        } else {
+          var emptyTips;
+          if (typeof that.config.emptyTips === 'function') {
+            file[ 'diffName' ] = printerUtils.getDiffName(file);
+            emptyTips = that.config.emptyTips(file);
+          } else {
+            emptyTips = that.config.emptyTips;
+          }
+          diffs = that.generateEmptyDiff(emptyTips);
+        }
       } else {
         diffs = that.generateEmptyDiff();
       }
@@ -7253,13 +7295,14 @@ process.umask = function() { return 0; };
       });
   };
 
-  SideBySidePrinter.prototype.generateEmptyDiff = function() {
+  SideBySidePrinter.prototype.generateEmptyDiff = function (emptyTips) {
     var fileHtml = {};
     fileHtml.right = '';
 
     fileHtml.left = hoganUtils.render(genericTemplatesPath, 'empty-diff', {
       contentClass: 'd2h-code-side-line',
-      diffParser: diffParser
+      diffParser: diffParser,
+      emptyTips: emptyTips
     });
 
     return fileHtml;
@@ -7275,7 +7318,39 @@ if (!!!global.browserTemplates) global.browserTemplates = {};
 var Hogan = require("hogan.js");global.browserTemplates["file-summary-line"] = new Hogan.Template({code: function (c,p,i) { var t=this;t.b(i=i||"");t.b("<li class=\"d2h-file-list-line\">");t.b("\n" + i);t.b("    <span class=\"d2h-file-name-wrapper\">");t.b("\n" + i);t.b("      <span>");t.b(t.rp("<fileIcon0",c,p,""));t.b("</span>");t.b("\n" + i);t.b("      <a href=\"#");t.b(t.v(t.f("fileHtmlId",c,p,0)));t.b("\" class=\"d2h-file-name\">");t.b(t.v(t.f("fileName",c,p,0)));t.b("</a>");t.b("\n" + i);t.b("      <span class=\"d2h-file-stats\">");t.b("\n" + i);t.b("          <span class=\"d2h-lines-added\">");t.b(t.v(t.f("addedLines",c,p,0)));t.b("</span>");t.b("\n" + i);t.b("          <span class=\"d2h-lines-deleted\">");t.b(t.v(t.f("deletedLines",c,p,0)));t.b("</span>");t.b("\n" + i);t.b("      </span>");t.b("\n" + i);t.b("    </span>");t.b("\n" + i);t.b("</li>");return t.fl(); },partials: {"<fileIcon0":{name:"fileIcon", partials: {}, subs: {  }}}, subs: {  }});
 global.browserTemplates["file-summary-wrapper"] = new Hogan.Template({code: function (c,p,i) { var t=this;t.b(i=i||"");t.b("<div class=\"d2h-file-list-wrapper\">");t.b("\n" + i);t.b("    <div class=\"d2h-file-list-header\">");t.b("\n" + i);t.b("        <span class=\"d2h-file-list-title\">Files changed (");t.b(t.v(t.f("filesNumber",c,p,0)));t.b(")</span>");t.b("\n" + i);t.b("        <a class=\"d2h-file-switch d2h-hide\">hide</a>");t.b("\n" + i);t.b("        <a class=\"d2h-file-switch d2h-show\">show</a>");t.b("\n" + i);t.b("    </div>");t.b("\n" + i);t.b("    <ol class=\"d2h-file-list\">");t.b("\n" + i);t.b("    ");t.b(t.t(t.f("files",c,p,0)));t.b("\n" + i);t.b("    </ol>");t.b("\n" + i);t.b("</div>");return t.fl(); },partials: {}, subs: {  }});
 global.browserTemplates["generic-column-line-number"] = new Hogan.Template({code: function (c,p,i) { var t=this;t.b(i=i||"");t.b("<tr>");t.b("\n" + i);t.b("    <td class=\"");t.b(t.v(t.f("lineClass",c,p,0)));t.b(" ");t.b(t.v(t.d("diffParser.LINE_TYPE.INFO",c,p,0)));t.b("\"></td>");t.b("\n" + i);t.b("    <td class=\"");t.b(t.v(t.d("diffParser.LINE_TYPE.INFO",c,p,0)));t.b("\">");t.b("\n" + i);t.b("        <div class=\"");t.b(t.v(t.f("contentClass",c,p,0)));t.b(" ");t.b(t.v(t.d("diffParser.LINE_TYPE.INFO",c,p,0)));t.b("\">");t.b(t.t(t.f("blockHeader",c,p,0)));t.b("</div>");t.b("\n" + i);t.b("    </td>");t.b("\n" + i);t.b("</tr>");return t.fl(); },partials: {}, subs: {  }});
-global.browserTemplates["generic-empty-diff"] = new Hogan.Template({code: function (c,p,i) { var t=this;t.b(i=i||"");t.b("<tr>");t.b("\n" + i);t.b("    <td class=\"");t.b(t.v(t.d("diffParser.LINE_TYPE.INFO",c,p,0)));t.b("\">");t.b("\n" + i);t.b("        <div class=\"");t.b(t.v(t.f("contentClass",c,p,0)));t.b(" ");t.b(t.v(t.d("diffParser.LINE_TYPE.INFO",c,p,0)));t.b("\">");t.b("\n" + i);t.b("            File without changes");t.b("\n" + i);t.b("        </div>");t.b("\n" + i);t.b("    </td>");t.b("\n" + i);t.b("</tr>");return t.fl(); },partials: {}, subs: {  }});
+  global.browserTemplates[ "generic-empty-diff" ] = new Hogan.Template({
+    code: function (c, p, i) {
+      var t = this;
+      t.b(i = i || "");
+      t.b("<tr>");
+      t.b("\n" + i);
+      t.b("    <td class=\"");
+      t.b(t.v(t.d("diffParser.LINE_TYPE.INFO", c, p, 0)));
+      t.b("\">");
+      t.b("\n" + i);
+      t.b("        <div class=\"");
+      t.b(t.v(t.f("contentClass", c, p, 0)));
+      t.b(" ");
+      t.b(t.v(t.d("diffParser.LINE_TYPE.INFO", c, p, 0)));
+      t.b("\">");
+      t.b("\n" + i);
+      t.b("            ");
+      if (t.s(t.f("emptyTips", c, p, 1), c, p, 0, 147, 162, "{{ }}")) {
+        t.rs(c, p, function (c, p, t) {t.b(t.t(t.f("emptyTips", c, p, 0)));});
+        c.pop();
+      }
+      t.b("\n" + i);
+      t.b("            ");
+      if (!t.s(t.f("emptyTips", c, p, 1), c, p, 1, 0, 0, "")) {t.b("File without changes");}
+      ;t.b("\n" + i);
+      t.b("        </div>");
+      t.b("\n" + i);
+      t.b("    </td>");
+      t.b("\n" + i);
+      t.b("</tr>");
+      return t.fl();
+    }, partials: {}, subs: {}
+  });
 global.browserTemplates["generic-file-path"] = new Hogan.Template({code: function (c,p,i) { var t=this;t.b(i=i||"");t.b("<span class=\"d2h-file-name-wrapper\">");t.b("\n" + i);t.b("    <span class=\"d2h-icon-wrapper\">");t.b(t.rp("<fileIcon0",c,p,""));t.b("</span>");t.b("\n" + i);t.b("    <span class=\"d2h-file-name\">");t.b(t.v(t.f("fileDiffName",c,p,0)));t.b("</span>");t.b("\n" + i);t.b(t.rp("<fileTag1",c,p,"    "));t.b("</span>");return t.fl(); },partials: {"<fileIcon0":{name:"fileIcon", partials: {}, subs: {  }},"<fileTag1":{name:"fileTag", partials: {}, subs: {  }}}, subs: {  }});
 global.browserTemplates["generic-line"] = new Hogan.Template({code: function (c,p,i) { var t=this;t.b(i=i||"");t.b("<tr>");t.b("\n" + i);t.b("    <td class=\"");t.b(t.v(t.f("lineClass",c,p,0)));t.b(" ");t.b(t.v(t.f("type",c,p,0)));t.b("\">");t.b("\n" + i);t.b("      ");t.b(t.t(t.f("lineNumber",c,p,0)));t.b("\n" + i);t.b("    </td>");t.b("\n" + i);t.b("    <td class=\"");t.b(t.v(t.f("type",c,p,0)));t.b("\">");t.b("\n" + i);t.b("        <div class=\"");t.b(t.v(t.f("contentClass",c,p,0)));t.b(" ");t.b(t.v(t.f("type",c,p,0)));t.b("\">");t.b("\n" + i);if(t.s(t.f("prefix",c,p,1),c,p,0,171,247,"{{ }}")){t.rs(c,p,function(c,p,t){t.b("            <span class=\"d2h-code-line-prefix\">");t.b(t.t(t.f("prefix",c,p,0)));t.b("</span>");t.b("\n" + i);});c.pop();}if(t.s(t.f("content",c,p,1),c,p,0,279,353,"{{ }}")){t.rs(c,p,function(c,p,t){t.b("            <span class=\"d2h-code-line-ctn\">");t.b(t.t(t.f("content",c,p,0)));t.b("</span>");t.b("\n" + i);});c.pop();}t.b("        </div>");t.b("\n" + i);t.b("    </td>");t.b("\n" + i);t.b("</tr>");return t.fl(); },partials: {}, subs: {  }});
 global.browserTemplates["generic-wrapper"] = new Hogan.Template({code: function (c,p,i) { var t=this;t.b(i=i||"");t.b("<div class=\"d2h-wrapper\">");t.b("\n" + i);t.b("    ");t.b(t.t(t.f("content",c,p,0)));t.b("\n" + i);t.b("</div>");return t.fl(); },partials: {}, subs: {  }});
